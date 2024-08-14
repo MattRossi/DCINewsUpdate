@@ -39,7 +39,7 @@ class DCI:
 
     @staticmethod
     def get_news() -> Story:
-        response: Response = DCI_API.get_request(DCI_API.BASE_URL + 'news')
+        response: Response = DCI_API.get_request(DCI_API.BASE_URL + 'news?type=1')
         with open('img.jpg', 'wb') as f:
             f.write(DCI_API.get_request(response.json()[DCI.STORY_INDEX]['photoUrlThumb']).content)
         url = DCI.BASE_URL + response.json()[DCI.STORY_INDEX]['slug']
