@@ -1,4 +1,4 @@
-import configparser
+from configparser import ConfigParser
 import praw
 from praw.models import Subreddit
 from praw.models.reddit.wikipage import WikiPage
@@ -9,7 +9,7 @@ from dcinewsupdate.dci import Story
 class Reddit:
 
     def __init__(self):
-        config = configparser.ConfigParser()
+        config: ConfigParser = ConfigParser()
         config.read('config.properties')
         self.reddit: praw.Reddit = praw.Reddit(
             client_id=config['REDDIT']['CLIENT_ID'],
@@ -28,6 +28,6 @@ class Reddit:
     def update_link(self, story: Story):
         wiki: WikiPage = self.subreddit.wiki['config/sidebar']
         before_content: str = wiki.content_md
-        new_content = before_content.split('[Sidebarimglink]')[0]
+        new_content: str = before_content.split('[Sidebarimglink]')[0]
         new_content += f'[Sidebarimglink]({story.url})'
         wiki.edit(content=new_content)

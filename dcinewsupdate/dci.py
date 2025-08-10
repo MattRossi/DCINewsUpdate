@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 import requests
 from requests import Response
+from bs4 import BeautifulSoup
+from PIL import Image
 
 
 @dataclass
@@ -8,15 +10,19 @@ class Story:
     photo: str
     url: str
 
-class DCI_API:
+class API:
 
-    BASE_URL: str = 'https://api.dci.org/api/v1/'
+    DEFAULT_HEADERS: dict = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) ' +\
+            'Gecko/20100101 Firefox/141.0'
+    }
 
     @staticmethod
-    def get_request(url: str) -> Response:
+    def get_request(url: str, headers: dict = None) -> Response:
         response: Response = requests.get(
             url=url,
-            timeout=30
+            timeout=30,
+            headers=headers if headers else None
         )
         print(f'Response Code: {response.status_code}')
         return response
@@ -34,13 +40,16 @@ class DCI_API:
 
 class DCI:
 
-    BASE_URL: str = 'https://www.dci.org/news/'
-    STORY_INDEX: int = 0
+    NEWS_SOURCE_URL: str = 'https://www.dci.org/news/?corpId&sort=desc&type=featured&pageno=1'
 
     @staticmethod
     def get_news() -> Story:
-        response: Response = DCI_API.get_request(DCI_API.BASE_URL + 'news?type=1')
+        response: Response = API.get_request(DCI.NEWS_SOURCE_URL, headers=API.DEFAULT_HEADERS)
+        soup: BeautifulSoup = BeautifulSoup(response.text, 'html.parser')
+        image_link: str = soup.find('div', class_='recent-story-item-img').find('img').attrs['src']
         with open('img.jpg', 'wb') as f:
-            f.write(DCI_API.get_request(response.json()[DCI.STORY_INDEX]['photoUrlThumb']).content)
-        url = DCI.BASE_URL + response.json()[DCI.STORY_INDEX]['slug']
+            f.write(API.get_request(image_link, headers=API.DEFAULT_HEADERS).content)
+        img = Image.open('img.jpg')
+        img.save('img.jpg', quality=50, optimize=True)
+        url: str = soup.find('div', class_='recent-story-item-info').find('a').attrs['href']
         return Story('img.jpg', url)
